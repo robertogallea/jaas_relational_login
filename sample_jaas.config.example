@@ -1,0 +1,13 @@
+/** Login Configuration for the JAAS Sample Application **/
+
+Sample {
+   relationalLogin.DBLogin required debug=true
+   dbDriver="oracle.jdbc.driver.OracleDriver"
+   userTable="userTableName"
+   userColumn="username"
+   passColumn="password_sha"
+   dbURL="your_db_url"
+   dbUser="dbUserName"
+   dbPassword="dbPassword"
+   hashAlgorithm="SHA1";
+};
