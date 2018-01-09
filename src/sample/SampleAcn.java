@@ -66,7 +66,7 @@ public class SampleAcn {
         // file and to also use the specified CallbackHandler.
         LoginContext lc = null;
         try {
-            lc = new LoginContext("Sample", new MyCallbackHandler());
+            lc = new LoginContext("ShibUserPassAuth", new MyCallbackHandler());
         } catch (LoginException le) {
             System.err.println("Cannot create LoginContext. "
                 + le.getMessage());

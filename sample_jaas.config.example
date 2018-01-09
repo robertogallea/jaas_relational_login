@@ -1,6 +1,6 @@
 /** Login Configuration for the JAAS Sample Application **/
 
-Sample {
+ShibUserPassAuth  {
    relationalLogin.DBLogin required debug=true
    dbDriver="oracle.jdbc.driver.OracleDriver"
    userTable="userTableName"
