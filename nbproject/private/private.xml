@@ -3,13 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/relationalLogin/Utils.java</file>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/relationalLogin/DBLogin.java</file>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/sample/SampleAcn.java</file>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/relationalLogin/TypedPrincipal.java</file>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/relationalLogin/BasicLogin.java</file>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/relationalLogin/BCrypt.java</file>
-            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAASTutorial/src/relationalLogin/SimpleLogin.java</file>
+            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAAS_relational_login/src/relationalLogin/Utils.java</file>
+            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAAS_relational_login/src/relationalLogin/SimpleLogin.java</file>
+            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAAS_relational_login/src/relationalLogin/DBLoginSalt.java</file>
+            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAAS_relational_login/src/sample/SampleAcn.java</file>
+            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAAS_relational_login/src/relationalLogin/BasicLogin.java</file>
+            <file>file:/C:/Users/Roberto%20Gallea/Documents/NetBeansProjects/JAAS_relational_login/src/relationalLogin/DBLogin.java</file>
         </group>
     </open-files>
 </project-private>

@@ -27,6 +27,7 @@ public class DBLogin extends SimpleLogin
 	protected String                userTable;
 	protected String                userColumn;
 	protected String                passColumn;
+        protected String                saltColumn;
 	protected String                where;
 
 	protected synchronized Vector validateUser(String username, char password[]) throws LoginException
@@ -43,26 +44,29 @@ public class DBLogin extends SimpleLogin
 			   con = DriverManager.getConnection(dbURL, dbUser, dbPassword);
 			else
 			   con = DriverManager.getConnection(dbURL);
-
-			psu = con.prepareStatement("SELECT " + passColumn + " FROM " + userTable +
+                        
+			psu = con.prepareStatement("SELECT " + passColumn + (!saltColumn.equals("") ? ("," + saltColumn) : "")  + " FROM " + userTable +
 									   " WHERE " + userColumn + "=?" + where);
 
-			/* Set the username to the statement */
+			
 			psu.setString(1, username);
 			rsu = psu.executeQuery();
-			if (!rsu.next()) throw new FailedLoginException("Unknown user");
+			if (!rsu.next()) throw new FailedLoginException("Invalid details");
 			String upwd = rsu.getString(1);
+                        String salt = (!saltColumn.equals("") ? rsu.getString(2) : "");
                         
                         
                         String tpwd = new String();
+                        
                         try {
-                            tpwd = this.sha1(new String(password));
+                            tpwd = this.hash(new String(password) + salt);  
                         } catch (NoSuchAlgorithmException ex) {
                             Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-			/* Check the password */
-			if (!upwd.equals(tpwd)) throw new FailedLoginException("Bad password");
+
+			/* Check the password */                        
+			if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException("Invalid details");
 
 			Vector p = new Vector();
 			p.add(new TypedPrincipal(username, TypedPrincipal.USER));
@@ -103,6 +107,7 @@ public class DBLogin extends SimpleLogin
 		userTable    = getOption("userTable",    "User");
 		userColumn   = getOption("userColumn", "user_name");
 		passColumn   = getOption("passColumn",    "user_passwd");
+                saltColumn   = getOption("saltColumn", "");
 		where        = getOption("where",        "");
 		if (null != where && where.length() > 0)
 			where = " AND " + where;
@@ -110,7 +115,7 @@ public class DBLogin extends SimpleLogin
 			where = "";
 	}
         
-        String sha1(String input) throws NoSuchAlgorithmException {
+        String hash(String input) throws NoSuchAlgorithmException {
             MessageDigest mDigest = MessageDigest.getInstance(getOption("hashAlgorithm", "SHA1"));
             byte[] result = mDigest.digest(input.getBytes());
             StringBuffer sb = new StringBuffer();

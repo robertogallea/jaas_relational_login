@@ -9,5 +9,6 @@ ShibUserPassAuth  {
    dbURL="your_db_url"
    dbUser="dbUserName"
    dbPassword="dbPassword"
-   hashAlgorithm="SHA1";
+   hashAlgorithm="SHA-512"
+   saltColumn="";
 };
