@@ -51,22 +51,28 @@ public class DBLogin extends SimpleLogin
 			
 			psu.setString(1, username);
 			rsu = psu.executeQuery();
-			if (!rsu.next()) throw new FailedLoginException("Invalid details");
+			if (!rsu.next()) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
 			String upwd = rsu.getString(1);
                         String salt = (!saltColumn.equals("") ? rsu.getString(2) : "");
                         
                         
                         String tpwd = new String();
                         
-                        try {
-                            tpwd = this.hash(new String(password) + salt);  
-                        } catch (NoSuchAlgorithmException ex) {
-                            Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
+                        String hashingAlg = getOption("hashAlgorithm", null);
+                                       
+                        if (hashingAlg != null && (!hashingAlg.isEmpty())) {
+                            try {
+                                tpwd = this.hash(new String(password) + salt, hashingAlg);  
+                            } catch (NoSuchAlgorithmException ex) {
+                                Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                            /* Check the password */                        
+                            if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+                        } else {
+                            tpwd = new String(password);
+                            if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
                         }
-
-
-			/* Check the password */                        
-			if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException("Invalid details");
 
 			Vector p = new Vector();
 			p.add(new TypedPrincipal(username, TypedPrincipal.USER));
@@ -115,8 +121,8 @@ public class DBLogin extends SimpleLogin
 			where = "";
 	}
         
-        String hash(String input) throws NoSuchAlgorithmException {
-            MessageDigest mDigest = MessageDigest.getInstance(getOption("hashAlgorithm", "SHA1"));
+        String hash(String input, String hashingAlg) throws NoSuchAlgorithmException {
+            MessageDigest mDigest = MessageDigest.getInstance(hashingAlg);
             byte[] result = mDigest.digest(input.getBytes());
             StringBuffer sb = new StringBuffer();
             for (int i = 0; i < result.length; i++) {

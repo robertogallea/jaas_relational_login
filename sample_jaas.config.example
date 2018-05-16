@@ -10,5 +10,6 @@ ShibUserPassAuth  {
    dbUser="dbUserName"
    dbPassword="dbPassword"
    hashAlgorithm="SHA-512"
-   saltColumn="";
+   saltColumn=""
+   errorMessage="Invalid password";
 };
