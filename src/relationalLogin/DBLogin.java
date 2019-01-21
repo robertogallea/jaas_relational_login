@@ -33,7 +33,6 @@ public class DBLogin extends SimpleLogin
 	protected String                where;
 
 	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        private final Logger log = LoggerFactory.getLogger(DBLogin.class);
 
 	protected synchronized Vector validateUser(String username, char password[]) throws LoginException
 	{
