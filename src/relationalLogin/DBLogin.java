@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import javax.security.auth.*;
 import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * Simple database based authentication module.
@@ -29,6 +31,9 @@ public class DBLogin extends SimpleLogin
 	protected String                passColumn;
         protected String                saltColumn;
 	protected String                where;
+
+	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        private final Logger log = LoggerFactory.getLogger(DBLogin.class);
 
 	protected synchronized Vector validateUser(String username, char password[]) throws LoginException
 	{
@@ -70,8 +75,12 @@ public class DBLogin extends SimpleLogin
                             /* Check the password */                        
                             if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
                         } else {
-                            tpwd = new String(password);
-                            if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+		            tpwd = new String(password);
+			    if (hahshingAlg.toLowerCase == "bcrypt") {
+			       if (!passwordEncoder.matches(tpwd, upwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
+			    } else {
+                               if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+			    }
                         }
 
 			Vector p = new Vector();
