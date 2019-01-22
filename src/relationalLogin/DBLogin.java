@@ -58,28 +58,32 @@ public class DBLogin extends SimpleLogin
 			if (!rsu.next()) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
 			String upwd = rsu.getString(1);
                         String salt = (!saltColumn.equals("") ? rsu.getString(2) : "");
-                        
-                        
+                                               
                         String tpwd = new String();
                         
                         String hashingAlg = getOption("hashAlgorithm", null);
                                        
                         if (hashingAlg != null && (!hashingAlg.isEmpty())) {
-                            try {
-                                tpwd = this.hash(new String(password) + salt, hashingAlg);  
-                            } catch (NoSuchAlgorithmException ex) {
-                                Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
-                            }
 
-                            /* Check the password */                        
-                            if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+                            Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, hashingAlg);
+
+			    if (hashingAlg.toLowerCase().equals("bcrypt")) {
+                               tpwd = new String(password);
+			       Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, tpwd+":"+upwd);
+                               if (!passwordEncoder.matches(tpwd, upwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
+			    } else {
+                               try {
+                                   tpwd = this.hash(new String(password) + salt, hashingAlg);  
+                               } catch (NoSuchAlgorithmException ex) {
+                                   Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
+                               }
+                               /* Check the password */                        
+                               if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+			    }
                         } else {
 		            tpwd = new String(password);
-			    if (hahshingAlg.toLowerCase == "bcrypt") {
-			       if (!passwordEncoder.matches(tpwd, upwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
-			    } else {
-                               if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
-			    }
+                            Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, tpwd+":"+upwd);
+                            if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
                         }
 
 			Vector p = new Vector();
