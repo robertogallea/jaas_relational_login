@@ -52,7 +52,6 @@ public class DBLogin extends SimpleLogin
 			psu = con.prepareStatement("SELECT " + passColumn + (!saltColumn.equals("") ? ("," + saltColumn) : "")  + " FROM " + userTable +
 									   " WHERE " + userColumn + "=?" + where);
 
-			
 			psu.setString(1, username);
 			rsu = psu.executeQuery();
 			if (!rsu.next()) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
@@ -65,12 +64,10 @@ public class DBLogin extends SimpleLogin
                                        
                         if (hashingAlg != null && (!hashingAlg.isEmpty())) {
 
-                            Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, hashingAlg);
-
 			    if (hashingAlg.toLowerCase().equals("bcrypt")) {
                                tpwd = new String(password);
-			       Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, tpwd+":"+upwd);
-                               if (!passwordEncoder.matches(tpwd, upwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
+			       String upwd2 = "$2a" + upwd.substring(3);
+                               if (!passwordEncoder.matches(tpwd, upwd2)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
 			    } else {
                                try {
                                    tpwd = this.hash(new String(password) + salt, hashingAlg);  
@@ -82,7 +79,6 @@ public class DBLogin extends SimpleLogin
 			    }
                         } else {
 		            tpwd = new String(password);
-                            Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, tpwd+":"+upwd);
                             if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
                         }
 
