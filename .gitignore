@@ -1,3 +1,6 @@
 sample_jaas.config
 build/
 dist/
+ivy/
+lib/
+target/

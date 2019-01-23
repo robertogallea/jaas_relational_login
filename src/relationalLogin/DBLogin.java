@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import javax.security.auth.*;
 import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * Simple database based authentication module.
@@ -30,6 +32,8 @@ public class DBLogin extends SimpleLogin
         protected String                saltColumn;
 	protected String                where;
 
+	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
 	protected synchronized Vector validateUser(String username, char password[]) throws LoginException
 	{
 		ResultSet rsu = null, rsr = null;
@@ -48,29 +52,33 @@ public class DBLogin extends SimpleLogin
 			psu = con.prepareStatement("SELECT " + passColumn + (!saltColumn.equals("") ? ("," + saltColumn) : "")  + " FROM " + userTable +
 									   " WHERE " + userColumn + "=?" + where);
 
-			
 			psu.setString(1, username);
 			rsu = psu.executeQuery();
 			if (!rsu.next()) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
 			String upwd = rsu.getString(1);
                         String salt = (!saltColumn.equals("") ? rsu.getString(2) : "");
-                        
-                        
+                                               
                         String tpwd = new String();
                         
                         String hashingAlg = getOption("hashAlgorithm", null);
                                        
                         if (hashingAlg != null && (!hashingAlg.isEmpty())) {
-                            try {
-                                tpwd = this.hash(new String(password) + salt, hashingAlg);  
-                            } catch (NoSuchAlgorithmException ex) {
-                                Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
-                            }
 
-                            /* Check the password */                        
-                            if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+			    if (hashingAlg.toLowerCase().equals("bcrypt")) {
+                               tpwd = new String(password);
+			       String upwd2 = "$2a" + upwd.substring(3);
+                               if (!passwordEncoder.matches(tpwd, upwd2)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
+			    } else {
+                               try {
+                                   tpwd = this.hash(new String(password) + salt, hashingAlg);  
+                               } catch (NoSuchAlgorithmException ex) {
+                                   Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
+                               }
+                               /* Check the password */                        
+                               if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+			    }
                         } else {
-                            tpwd = new String(password);
+		            tpwd = new String(password);
                             if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
                         }
 
