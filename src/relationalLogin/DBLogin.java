@@ -13,6 +13,7 @@ import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.apache.commons.codec.digest.Md5Crypt;
 
 /**
  * Simple database based authentication module.
@@ -29,7 +30,7 @@ public class DBLogin extends SimpleLogin
 	protected String                userTable;
 	protected String                userColumn;
 	protected String                passColumn;
-        protected String                saltColumn;
+	protected String                saltColumn;
 	protected String                where;
 
 	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -65,10 +66,15 @@ public class DBLogin extends SimpleLogin
                         if (hashingAlg != null && (!hashingAlg.isEmpty())) {
 
 			    if (hashingAlg.toLowerCase().equals("bcrypt")) {
-                               tpwd = new String(password);
-			       String upwd2 = "$2a" + upwd.substring(3);
-                               if (!passwordEncoder.matches(tpwd, upwd2)) throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
-			    } else {
+					tpwd = new String(password);
+					String upwd2 = "$2a" + upwd.substring(3);
+					if (!passwordEncoder.matches(tpwd, upwd2))
+						throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
+				} else if (hashingAlg.toLowerCase().equals("md5crypt")) {
+					tpwd = new String(password);
+					/* Check the password */
+					if (!upwd.equals(Md5Crypt.md5Crypt(tpwd.getBytes(), upwd))) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+				} else {
                                try {
                                    tpwd = this.hash(new String(password) + salt, hashingAlg);  
                                } catch (NoSuchAlgorithmException ex) {
