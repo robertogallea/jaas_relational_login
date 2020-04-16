@@ -1,10 +1,15 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" default="jar">
-  <property name="ivy.version" value="2.3.0"/>
-  <property name="ivy.url" value="http://central.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
+  <property name="ivy.version" value="2.5.0"/>
+  <property name="ivy.url" value="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
   <property name="ivy.jar.dir" value="${basedir}/ivy"/>
   <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
   <property name="build.dir" value="target"/>
-  <property name="src.dir" value="src"/> 
+  <property name="src.dir" value="src"/>
+  <property name="lib.dir" value="lib"/>
+
+  <path id="classpath">
+    <fileset dir="${lib.dir}" includes="**/*.jar"/>
+  </path>
 
   <target name="download-ivy" unless="skip.download">
     <mkdir dir="${ivy.jar.dir}"/>
@@ -27,7 +32,7 @@
   <target name="compile" depends="init">
     <echo message="compiling..."/>
     <mkdir dir="${build.dir}/classes"/>
-    <javac srcdir="${src.dir}" destdir="${build.dir}/classes"/>
+    <javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false" classpathref="classpath"/>
   </target>
 
   <target name="jar" depends="compile">
