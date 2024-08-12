@@ -13,7 +13,8 @@ import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.apache.commons.codec.digest.Md5Crypt;
+import org.apache.commons.codec.digest.Crypt;
+
 
 /**
  * Simple database based authentication module.
@@ -70,10 +71,10 @@ public class DBLogin extends SimpleLogin
 					String upwd2 = "$2a" + upwd.substring(3);
 					if (!passwordEncoder.matches(tpwd, upwd2))
 						throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
-				} else if (hashingAlg.toLowerCase().equals("md5crypt")) {
+				} else if (hashingAlg.toLowerCase().equals("crypt")) {
 					tpwd = new String(password);
 					/* Check the password */
-					if (!upwd.equals(Md5Crypt.md5Crypt(tpwd.getBytes(), upwd))) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+					if (!upwd.equals(Crypt.crypt(tpwd.getBytes(), salt))) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
 				} else {
                                try {
                                    tpwd = this.hash(new String(password) + salt, hashingAlg);  

@@ -12,9 +12,6 @@ import java.security.*;
  */
 public class Utils
 {
-	private final static String     ALGORITHM   = "MD5";
-	private static MessageDigest    md = null;
-
 	/**
 	 * Can't make these: all the methods are static
 	 */
@@ -75,27 +72,5 @@ public class Utils
 				pwd[b] = 0;
 			}
 		}
-	}
-
-	/**
-	 * Perform MD5 hashing on the supplied password and return a char array
-	 * containing the encrypted password as a printable string. The hash is
-	 * computed on the low 8 bits of each character.
-	 *
-	 * @param pwd The password to encrypt
-	 * @return a character array containing a 32 character long hex encoded
-	 * MD5 hash of the password
-	 */
-	public static char[] cryptPassword(char pwd[]) throws Exception
-	{
-		if (null == md) { md = MessageDigest.getInstance(ALGORITHM); }
-		md.reset();
-		byte pwdb[] = new byte[pwd.length];
-		for (int b = 0; b < pwd.length; b++) {
-			pwdb[b] = (byte) pwd[b];
-		}
-		char crypt[] = hexDump(md.digest(pwdb));
-		smudge(pwdb);
-		return crypt;
 	}
 }
