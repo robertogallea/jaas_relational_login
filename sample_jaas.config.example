@@ -11,5 +11,6 @@ ShibUserPassAuth  {
    dbPassword="dbPassword"
    hashAlgorithm="SHA-512"
    saltColumn=""
+   lastLoginColumn=""
    errorMessage="Invalid password";
 };
