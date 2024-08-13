@@ -3,7 +3,6 @@ package relationalLogin;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.*;
 import java.sql.*;
 import java.util.logging.Level;
@@ -13,7 +12,7 @@ import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.apache.commons.codec.digest.Md5Crypt;
+import org.apache.commons.codec.digest.Crypt;
 
 /**
  * Simple database based authentication module.
@@ -31,83 +30,74 @@ public class DBLogin extends SimpleLogin
 	protected String                userColumn;
 	protected String                passColumn;
 	protected String                saltColumn;
+	protected String                lastLoginColumn;
 	protected String                where;
 
 	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-	protected synchronized Vector validateUser(String username, char password[]) throws LoginException
-	{
-		ResultSet rsu = null, rsr = null;
-		Connection con = null;
-		PreparedStatement psu = null;
-
-		try
-		{
+	protected synchronized Vector validateUser(String username, char password[]) throws LoginException {
+		try {
 			Class.forName(dbDriver);
-
-			if (dbUser != null)
-			   con = DriverManager.getConnection(dbURL, dbUser, dbPassword);
-			else
-			   con = DriverManager.getConnection(dbURL);
-                        
-			psu = con.prepareStatement("SELECT " + passColumn + (!saltColumn.equals("") ? ("," + saltColumn) : "")  + " FROM " + userTable +
-									   " WHERE " + userColumn + "=?" + where);
-
-			psu.setString(1, username);
-			rsu = psu.executeQuery();
-			if (!rsu.next()) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
-			String upwd = rsu.getString(1);
-                        String salt = (!saltColumn.equals("") ? rsu.getString(2) : "");
-                                               
-                        String tpwd = new String();
-                        
-                        String hashingAlg = getOption("hashAlgorithm", null);
-                                       
-                        if (hashingAlg != null && (!hashingAlg.isEmpty())) {
-
-			    if (hashingAlg.toLowerCase().equals("bcrypt")) {
-					tpwd = new String(password);
-					String upwd2 = "$2a" + upwd.substring(3);
-					if (!passwordEncoder.matches(tpwd, upwd2))
-						throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
-				} else if (hashingAlg.toLowerCase().equals("md5crypt")) {
-					tpwd = new String(password);
-					/* Check the password */
-					if (!upwd.equals(Md5Crypt.md5Crypt(tpwd.getBytes(), upwd))) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
-				} else {
-                               try {
-                                   tpwd = this.hash(new String(password) + salt, hashingAlg);  
-                               } catch (NoSuchAlgorithmException ex) {
-                                   Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
-                               }
-                               /* Check the password */                        
-                               if (!upwd.toLowerCase().equals(tpwd.toLowerCase())) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
-			    }
-                        } else {
-		            tpwd = new String(password);
-                            if (!upwd.equals(tpwd)) throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
-                        }
-
-			Vector p = new Vector();
-			p.add(new TypedPrincipal(username, TypedPrincipal.USER));
-			return p;
-		}
-		catch (ClassNotFoundException e)
-		{
+	
+			try (Connection con = (dbUser != null) ? DriverManager.getConnection(dbURL, dbUser, dbPassword) : DriverManager.getConnection(dbURL);
+				 PreparedStatement psu = con.prepareStatement("SELECT " + passColumn + (!saltColumn.equals("") ? ("," + saltColumn) : "") + " FROM " + userTable +
+															  " WHERE " + userColumn + "=?" + where)) {
+	
+				psu.setString(1, username);
+				try (ResultSet rsu = psu.executeQuery()) {
+					if (!rsu.next()) {
+						throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+					}
+	
+					String upwd = rsu.getString(1);
+					String salt = (!saltColumn.equals("") ? rsu.getString(2) : "");
+	
+					String tpwd = new String();
+					String hashingAlg = getOption("hashAlgorithm", null);
+	
+					if (hashingAlg != null && (!hashingAlg.isEmpty())) {
+						if (hashingAlg.toLowerCase().equals("bcrypt")) {
+							tpwd = new String(password);
+							String upwd2 = "$2a" + upwd.substring(3);
+							if (!passwordEncoder.matches(tpwd, upwd2))
+								throw new FailedLoginException(getOption("errorMessage", "Invalid details (b)"));
+						} else if (hashingAlg.toLowerCase().equals("crypt")) {
+							tpwd = new String(password);
+							if (!upwd.equals(Crypt.crypt(tpwd.getBytes(), upwd)))
+								throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+						} else {
+							try {
+								tpwd = this.hash(new String(password) + salt, hashingAlg);
+							} catch (NoSuchAlgorithmException ex) {
+								Logger.getLogger(DBLogin.class.getName()).log(Level.SEVERE, null, ex);
+							}
+							if (!upwd.toLowerCase().equals(tpwd.toLowerCase()))
+								throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+						}
+					} else {
+						tpwd = new String(password);
+						if (!upwd.equals(tpwd))
+							throw new FailedLoginException(getOption("errorMessage", "Invalid details"));
+					}
+	
+					if (!lastLoginColumn.equals("")) {
+						try (PreparedStatement psuUpdate = con.prepareStatement("UPDATE " + userTable + " SET " + lastLoginColumn + " = CURRENT_TIMESTAMP WHERE " + userColumn + "= ?")) {
+							psuUpdate.setString(1, username);
+							psuUpdate.executeUpdate();
+						} catch (SQLException e) {
+							throw new LoginException("Database error: " + e.getMessage());
+						}
+					}
+	
+					Vector p = new Vector();
+					p.add(new TypedPrincipal(username, TypedPrincipal.USER));
+					return p;
+				}
+			}
+		} catch (ClassNotFoundException e) {
 			throw new LoginException("Error reading user database (" + e.getMessage() + ")");
-		}
-		catch (SQLException e)
-		{
+		} catch (SQLException e) {
 			throw new LoginException("Error reading user database (" + e.getMessage() + ")");
-		}
-		finally
-		{
-			try {
-				if (rsu != null) rsu.close();
-				if (rsr != null) rsr.close();
-				if (psu != null) psu.close();
-				if (con != null) con.close();
-			} catch (Exception e) { }
 		}
 	}
 
@@ -124,11 +114,13 @@ public class DBLogin extends SimpleLogin
 		if ((dbUser == null && dbPassword != null) || (dbUser != null && dbPassword == null))
 		   throw new Error("Either provide dbUser and dbPassword or encode both in dbURL");
 
-		userTable    = getOption("userTable",    "User");
-		userColumn   = getOption("userColumn", "user_name");
-		passColumn   = getOption("passColumn",    "user_passwd");
-                saltColumn   = getOption("saltColumn", "");
-		where        = getOption("where",        "");
+		userTable       = getOption("userTable",       "User");
+		userColumn      = getOption("userColumn",      "user_name");
+		passColumn      = getOption("passColumn",      "user_passwd");
+		saltColumn      = getOption("saltColumn",      "");
+		lastLoginColumn	= getOption("lastLoginColumn", "");
+		where           = getOption("where",           "");
+
 		if (null != where && where.length() > 0)
 			where = " AND " + where;
 		else
